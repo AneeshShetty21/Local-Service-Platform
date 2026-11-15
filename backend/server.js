@@ -64,6 +64,54 @@ app.get("/api/bookings", async (req, res) => {
 });
 
 
+
+app.patch("/api/bookings/:id/status", async (req, res) => {
+  try {
+    const { status } = req.body;
+
+    const allowedStatuses = [
+      "Pending",
+      "Accepted",
+      "Rejected",
+      "Completed"
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid booking status"
+      });
+    }
+
+  const booking = await Booking.findByIdAndUpdate(
+  req.params.id,
+  { status },
+  { returnDocument: "after", runValidators: true }
+);
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found"
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Booking status updated successfully",
+      booking
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to update booking status",
+      error: error.message
+    });
+  }
+});
+
+
 // Connect to MongoDB and start server
 async function startServer() {
   try {

@@ -80,9 +80,6 @@ const matchesCategory =
   }
 
 
- 
-
-
   return (
     <div className="app">
       <header className="navbar">

@@ -22,6 +22,11 @@ const bookingSchema = new mongoose.Schema(
     requirements: {
       type: String,
       default: ""
+    },
+    status: {
+      type: String,
+      enum: ["Pending", "Accepted", "Rejected", "Completed"],
+      default: "Pending"
     }
   },
   { timestamps: true }
