@@ -1,8 +1,13 @@
+
 const Booking = require("./models/Booking");
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 require("dotenv").config();
+
+const Admin = require("./models/Admin");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -24,9 +29,10 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-
+// Create Booking
 app.post("/api/bookings", async (req, res) => {
   console.log("Booking route reached!");
+
   try {
     const booking = new Booking(req.body);
     const savedBooking = await booking.save();
@@ -45,15 +51,14 @@ app.post("/api/bookings", async (req, res) => {
   }
 });
 
-
-
+// Get All Bookings
 app.get("/api/bookings", async (req, res) => {
   try {
     const bookings = await Booking.find().sort({ createdAt: -1 });
 
     res.json({
       success: true,
-      bookings: bookings
+      bookings
     });
   } catch (error) {
     res.status(500).json({
@@ -63,8 +68,7 @@ app.get("/api/bookings", async (req, res) => {
   }
 });
 
-
-
+// Update Booking Status
 app.patch("/api/bookings/:id/status", async (req, res) => {
   try {
     const { status } = req.body;
@@ -83,11 +87,11 @@ app.patch("/api/bookings/:id/status", async (req, res) => {
       });
     }
 
-  const booking = await Booking.findByIdAndUpdate(
-  req.params.id,
-  { status },
-  { returnDocument: "after", runValidators: true }
-);
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { returnDocument: "after", runValidators: true }
+    );
 
     if (!booking) {
       return res.status(404).json({
@@ -101,7 +105,6 @@ app.patch("/api/bookings/:id/status", async (req, res) => {
       message: "Booking status updated successfully",
       booking
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -111,6 +114,61 @@ app.patch("/api/bookings/:id/status", async (req, res) => {
   }
 });
 
+// Admin Login
+app.post("/api/admin/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Find admin by email
+    const admin = await Admin.findOne({ email });
+
+    if (!admin) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password"
+      });
+    }
+
+    // Compare password with hashed password
+    const isMatch = await bcrypt.compare(
+      password,
+      admin.password
+    );
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password"
+      });
+    }
+
+    // Generate JWT
+    const token = jwt.sign(
+      { id: admin._id, role: "admin" },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
+    );
+
+    res.json({
+      success: true,
+      message: "Login successful",
+      token,
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email
+      }
+    });
+  } catch (error) {
+    console.error("Admin login error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Admin login failed",
+      error: error.message
+    });
+  }
+});
 
 // Connect to MongoDB and start server
 async function startServer() {
@@ -128,3 +186,4 @@ async function startServer() {
 }
 
 startServer();
+
