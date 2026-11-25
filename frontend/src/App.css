@@ -625,14 +625,31 @@ input:focus-visible {
 
 .sidebar-logout {
   display: block;
+  width: 100%;
   padding: 12px;
+  border: none;
   border-radius: 8px;
   background: #253651;
   color: #dce5f0;
   font-size: 12px;
+  font-family: inherit;
   text-align: center;
   text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
 }
+
+
+.sidebar-logout:hover {
+  background: #314665;
+  color: #ffffff;
+}
+
+.sidebar-bottom a {
+  margin-bottom: 10px;
+}
+
+
 
 /* MAIN CONTENT */
 

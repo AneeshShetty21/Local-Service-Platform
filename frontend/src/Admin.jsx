@@ -1,9 +1,11 @@
 
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./App.css";
 
 function Admin() {
+  const navigate = useNavigate();
+
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -11,12 +13,21 @@ function Admin() {
   const [filterStatus, setFilterStatus] = useState("All");
   const [updatingId, setUpdatingId] = useState(null);
 
+  function handleLogout() {
+    sessionStorage.removeItem("adminToken");
+    sessionStorage.removeItem("adminInfo");
+
+    navigate("/login", { replace: true });
+  }
+
   useEffect(() => {
     async function fetchBookings() {
       try {
-        const response = await fetch(
-          "http://localhost:5000/api/bookings"
-        );
+        const response = await fetch("http://localhost:5000/api/bookings", {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem("adminToken")}`
+          }
+        });
 
         const data = await response.json();
 
@@ -44,7 +55,8 @@ function Admin() {
         {
           method: "PATCH",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionStorage.getItem("adminToken")}`
           },
           body: JSON.stringify({
             status: newStatus
@@ -145,7 +157,6 @@ function Admin() {
 
   return (
     <div className="admin-layout">
-
       <aside className="admin-sidebar">
         <Link to="/" className="admin-brand">
           <span className="admin-brand-icon">S</span>
@@ -178,11 +189,18 @@ function Admin() {
           <Link to="/" className="sidebar-logout">
             ← Back to Website
           </Link>
+
+          <button
+            type="button"
+            className="sidebar-logout"
+            onClick={handleLogout}
+          >
+            ↪ Logout
+          </button>
         </div>
       </aside>
 
       <main className="admin-main">
-
         <header className="admin-topbar">
           <div>
             <span className="admin-breadcrumb">
@@ -198,7 +216,6 @@ function Admin() {
         </header>
 
         <section className="admin-content" id="dashboard">
-
           <div className="admin-welcome">
             <div>
               <h2>Welcome back, Admin!</h2>
@@ -230,7 +247,6 @@ function Admin() {
           </div>
 
           <section className="admin-bookings-section" id="bookings">
-
             <div className="admin-bookings-heading">
               <div>
                 <h2>Customer Bookings</h2>
@@ -348,18 +364,10 @@ function Admin() {
                                 )
                               }
                             >
-                              <option value="Pending">
-                                Pending
-                              </option>
-                              <option value="Accepted">
-                                Accepted
-                              </option>
-                              <option value="Rejected">
-                                Rejected
-                              </option>
-                              <option value="Completed">
-                                Completed
-                              </option>
+                              <option value="Pending">Pending</option>
+                              <option value="Accepted">Accepted</option>
+                              <option value="Rejected">Rejected</option>
+                              <option value="Completed">Completed</option>
                             </select>
 
                             {updatingId === booking._id && (
@@ -375,19 +383,15 @@ function Admin() {
                 </table>
               </div>
             )}
-
           </section>
         </section>
 
         <footer className="admin-footer">
           © 2026 ServiceSpot. All rights reserved.
         </footer>
-
       </main>
     </div>
   );
 }
 
 export default Admin;
-
-
